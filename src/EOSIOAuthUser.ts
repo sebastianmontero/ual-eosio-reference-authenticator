@@ -124,6 +124,15 @@ export class EOSIOAuthUser extends User {
     }
   }
 
+  public async getAvailableAccountNames(): Promise<Array<string>> {
+    const keys = await this.getKeys()
+    let accountNames = []
+    for (const key of keys) {
+      accountNames = accountNames.concat(await this.getAccountNamesByKey(key))
+    }
+    return [...new Set(accountNames)]
+  }
+
   private extractAccountKeys(account: any): string[] {
     const keySubsets = account.permissions.map((permission) => permission.required_auth.keys.map((key) => key.key))
     let keys = []
@@ -160,15 +169,6 @@ export class EOSIOAuthUser extends User {
 
   private async getAccountNamesByKey(publicKey: string): Promise<Array<string>> {
     const { account_names: accountNames } = await this.rpc.history_get_key_accounts(publicKey)
-    return accountNames
-  }
-
-  public async getAccountNames(): Promise<Array<string>> {
-    const keys = await this.getKeys()
-    let accountNames = []
-    for (const key of keys) {
-      accountNames = accountNames.concat(await this.getAccountNamesByKey(key))
-    }
     return accountNames
   }
 }
