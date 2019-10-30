@@ -90,6 +90,25 @@ export class EOSIOAuth extends Authenticator {
     return this.users
   }
 
+  private async getUserPerChain(): Promise<Map<string, EOSIOAuthUser>> {
+    const map = new Map<string, EOSIOAuthUser>()
+    for (const chain of this.chains) {
+      const user = await new EOSIOAuthUser(chain, '', this.options)
+      await user.init()
+      map.set(chain.chainId, user)
+    }
+    return map
+  }
+
+  public async getAccountNamesPerChain(): Promise<Map<string, Array<string>>> {
+    const map = new Map<string, Array<string>>()
+    const chainUserMap = await this.getUserPerChain()
+    for (const [chainId, user] of chainUserMap) {
+      map.set(chainId, await user.getAvailableAccountNames());
+    }
+    return map
+  }
+
   /**
    * Calls logout on EOSIO Reference Authenticator. This clears any key caching applied by the signature provider.
    * Throws a Logout Error if unsuccessful.

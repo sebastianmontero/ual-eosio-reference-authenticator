@@ -29,7 +29,7 @@ export class EOSIOAuthUser extends User {
     super()
     this.api = null
     this.rpc = null
-    if (typeof(TextEncoder) !== 'undefined') {
+    if (typeof (TextEncoder) !== 'undefined') {
       this.textEncoder = TextEncoder
       this.textDecoder = TextDecoder
     } else {
@@ -155,5 +155,20 @@ export class EOSIOAuthUser extends User {
       const cause = new Error('Please initialize `EOSIOAuthUser` before using')
       throw new UALEOSIOAuthError(message, type, cause)
     }
+  }
+
+
+  private async getAccountNamesByKey(publicKey: string): Promise<Array<string>> {
+    const { account_names: accountNames } = await this.rpc.history_get_key_accounts(publicKey)
+    return accountNames
+  }
+
+  public async getAccountNames(): Promise<Array<string>> {
+    const keys = await this.getKeys()
+    let accountNames = []
+    for (const key of keys) {
+      accountNames = accountNames.concat(await this.getAccountNamesByKey(key))
+    }
+    return accountNames
   }
 }
