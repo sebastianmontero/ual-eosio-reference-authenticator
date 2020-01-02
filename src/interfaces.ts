@@ -21,4 +21,6 @@ export interface EOSIOAuthOptions {
   securityExclusions?: SecurityExclusions
   protocol?: string
   appName: string
+  cosigner: string
+  permission: string
 }

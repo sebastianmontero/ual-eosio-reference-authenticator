@@ -3,6 +3,7 @@ import { SignatureProviderInterface } from 'eosjs-signature-provider-interface'
 import { Chain, SignTransactionResponse, UALErrorType, User } from 'universal-authenticator-library'
 import * as bs58 from 'bs58'
 import { Api, JsonRpc } from 'eosjs'
+import { convertLegacyPublicKeys } from 'eosjs/dist/eosjs-numeric';
 import {
   TextDecoder as NodeTextDecoder,
   TextEncoder as NodeTextEncoder,
@@ -13,6 +14,41 @@ const RIPEMD160 = require('eosjs/dist/ripemd').RIPEMD160.hash // tslint:disable-
 import { EOSIOAuthOptions } from './interfaces'
 import { PlatformChecker } from './PlatformChecker'
 import { UALEOSIOAuthError } from './UALEOSIOAuthError'
+
+
+class CosignAuthorityProvider {
+  private rpc : JsonRpc
+  private cosigner : string
+  private per : string
+
+  constructor(rpc : JsonRpc, cosigner : string, per : string) {
+    this.rpc = rpc
+    this.cosigner = cosigner;
+    this.per = per
+  }
+
+  async getRequiredKeys(args) {
+    const { transaction } = args;
+
+    transaction.actions.forEach((action, ti) => {
+      action.authorization.forEach((auth) => {
+        if (
+          auth.actor === this.cosigner
+          && auth.permission === this.per
+        ) {
+            delete transaction.actions[ti].authorization;
+        }
+      })
+    });
+
+    console.log(transaction)
+
+    return convertLegacyPublicKeys((await this.rpc.fetch('/v1/chain/get_required_keys', {
+      transaction,
+      available_keys: args.availableKeys,
+    })).required_keys);
+  }
+}
 
 export class EOSIOAuthUser extends User {
   public signatureProvider: SignatureProviderInterface
@@ -52,7 +88,9 @@ export class EOSIOAuthUser extends User {
     const rpcEndpoint = this.chain.rpcEndpoints[0]
     const rpcEndpointString = this.buildRpcEndpoint(rpcEndpoint)
     this.rpc = new JsonRpc(rpcEndpointString)
+    console.log('this is the cosigner: ', this.options.cosigner, ' and this is the permission: ', this.options.permission)
     this.api = new Api({
+      authorityProvider: new CosignAuthorityProvider(this.rpc, this.options.cosigner, this.options.permission),
       rpc: this.rpc,
       signatureProvider: this.signatureProvider,
       textEncoder: new this.textEncoder(),
