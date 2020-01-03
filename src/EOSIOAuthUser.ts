@@ -41,8 +41,6 @@ class CosignAuthorityProvider {
       })
     });
 
-    console.log(transaction)
-
     return convertLegacyPublicKeys((await this.rpc.fetch('/v1/chain/get_required_keys', {
       transaction,
       available_keys: args.availableKeys,
@@ -88,14 +86,25 @@ export class EOSIOAuthUser extends User {
     const rpcEndpoint = this.chain.rpcEndpoints[0]
     const rpcEndpointString = this.buildRpcEndpoint(rpcEndpoint)
     this.rpc = new JsonRpc(rpcEndpointString)
-    console.log('this is the cosigner: ', this.options.cosigner, ' and this is the permission: ', this.options.permission)
-    this.api = new Api({
-      authorityProvider: new CosignAuthorityProvider(this.rpc, this.options.cosigner, this.options.permission),
-      rpc: this.rpc,
-      signatureProvider: this.signatureProvider,
-      textEncoder: new this.textEncoder(),
-      textDecoder: new this.textDecoder(),
-    })
+    
+    if(this.options.cosigner && this.options.permission){
+      this.api = new Api({
+        authorityProvider: new CosignAuthorityProvider(this.rpc, this.options.cosigner, this.options.permission),
+        rpc: this.rpc,
+        signatureProvider: this.signatureProvider,
+        textEncoder: new this.textEncoder(),
+        textDecoder: new this.textDecoder(),
+      })  
+    }
+    else{
+      this.api = new Api({
+        rpc: this.rpc,
+        signatureProvider: this.signatureProvider,
+        textEncoder: new this.textEncoder(),
+        textDecoder: new this.textDecoder(),
+      })
+    }
+    
   }
 
   public async signTransaction(
