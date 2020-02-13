@@ -128,7 +128,7 @@ export class EOSIOAuthUser extends User {
     const keys = await this.getKeys()
     let accountNames = []
     for (const key of keys) {
-      accountNames = accountNames.concat(await this.getAccountNamesByKey(key))
+      accountNames = accountNames.concat(await this.getAccountNamesByKey(this.convertToLegacyPubKey(key)))
     }
     return [...new Set(accountNames)]
   }
