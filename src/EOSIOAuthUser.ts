@@ -128,7 +128,7 @@ export class EOSIOAuthUser extends User {
     const keys = await this.getKeys()
     let accountNames = []
     for (const key of keys) {
-      accountNames = accountNames.concat(await this.getAccountNamesByKey(this.convertToLegacyPubKey(key)))
+      accountNames = accountNames.concat(await this.getAccountNamesByKey(key))
     }
     return [...new Set(accountNames)]
   }
@@ -168,7 +168,13 @@ export class EOSIOAuthUser extends User {
 
 
   private async getAccountNamesByKey(publicKey: string): Promise<Array<string>> {
-    const { account_names: accountNames } = await this.rpc.history_get_key_accounts(publicKey)
-    return accountNames
+    try {
+      const { account_names: accountNames } = await this.rpc.history_get_key_accounts(publicKey)
+      return accountNames
+    } catch (error) {
+      console.error('Error getting account names: ', error);
+      return [];
+    }
+
   }
 }
