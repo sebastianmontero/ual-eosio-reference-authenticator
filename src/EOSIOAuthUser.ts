@@ -14,6 +14,8 @@ import { EOSIOAuthOptions } from './interfaces'
 import { PlatformChecker } from './PlatformChecker'
 import { UALEOSIOAuthError } from './UALEOSIOAuthError'
 
+//const R1_PREFIX = 'PUB_R1_'
+
 export class EOSIOAuthUser extends User {
   public signatureProvider: SignatureProviderInterface
   private api: Api | null
@@ -124,11 +126,18 @@ export class EOSIOAuthUser extends User {
     }
   }
 
+  /* private isR1Key(publicKey) {
+    return publicKey.substr(0, R1_PREFIX.length) === R1_PREFIX
+  } */
+
   public async getAvailableAccountNames(): Promise<Array<string>> {
+
     const keys = await this.getKeys()
     let accountNames = []
     for (const key of keys) {
+      //if (!this.isR1Key(key)) {
       accountNames = accountNames.concat(await this.getAccountNamesByKey(key))
+      //}
     }
     return [...new Set(accountNames)]
   }
@@ -168,13 +177,9 @@ export class EOSIOAuthUser extends User {
 
 
   private async getAccountNamesByKey(publicKey: string): Promise<Array<string>> {
-    try {
-      const { account_names: accountNames } = await this.rpc.history_get_key_accounts(publicKey)
-      return accountNames
-    } catch (error) {
-      console.error('Error getting account names: ', error);
-      return [];
-    }
-
+    console.log('Getting accounts for: ', publicKey)
+    const { account_names: accountNames } = await this.rpc.history_get_key_accounts(publicKey)
+    console.log('Accounts: ', accountNames)
+    return accountNames
   }
 }
