@@ -172,8 +172,8 @@ export class EOSIOAuthUser extends User {
       const { account_names: accountNames } = await this.rpc.history_get_key_accounts(publicKey)
       return accountNames
     } catch (error) {
-      console.error('Error getting account names: ', error);
-      return [];
+      console.error('Error getting account names: ', error)
+      return []
     }
 
   }

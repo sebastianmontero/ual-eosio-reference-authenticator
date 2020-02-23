@@ -104,7 +104,8 @@ export class EOSIOAuth extends Authenticator {
     const map = new Map<string, Array<string>>()
     const chainUserMap = await this.getUserPerChain()
     for (const [chainId, user] of chainUserMap) {
-      map.set(chainId, await user.getAvailableAccountNames());
+      map.set(chainId, await user.getAvailableAccountNames())
+      user.signatureProvider.cleanUp()
     }
     return map
   }
